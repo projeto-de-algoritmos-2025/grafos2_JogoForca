@@ -8,8 +8,11 @@
 
 #define MAX_WORDS 300
 #define MAX_WORD_SIZE 25
+#define MAX_ATTEMPTS 6
 
 char **load_words(const char* filename, int *word_count);
+char *get_random_word(char **words, int count);
+int play_game(const char *word, int wins);
 
 int main(){
     initscr();
@@ -31,9 +34,19 @@ int main(){
     }
 
     int exitGame = 0;
+    int wins = 0;
     while (!exitGame)
     {
-        
+        char word = random_word(words, words_count);
+        int result = play_game(word, wins);
+        if(result == 1){
+            wins++;
+
+        } else if(result == 0){
+            wins = 0;
+        } else if(result == -1) {
+            exitGame = 1;
+        }
     }
     
 
@@ -74,4 +87,25 @@ char **load_words(const char* filename, int *word_count){
 
     
     return words;
+}
+
+char *get_random_word(char **words, int count){
+    int number = rand() % count;
+}
+
+int play_game(const char *word, int wins){
+    int len = strlen(word);
+    char *display = malloc(len + 1);
+    for(int i=0; i < len; i++){
+        display[i] = '_';
+    }
+
+    int attempts = 0;
+    int correct = 0;
+
+    WINDOW *win = newwin(20, 40, 0, 0);
+
+    while(attempts < MAX_ATTEMPTS && correct < len){
+
+    }
 }
