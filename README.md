@@ -23,7 +23,7 @@ Grafo de Djikstra que quando aperta H cria um modo de ajuda onde o proprio jogo 
 
 ## Video de Apresentação
 
-[Apresentação](https://www.youtube.com/watch?v=L_lVm_gGn6k)
+[Apresentação]()
 
 
 ## Screenshots
@@ -51,12 +51,6 @@ instalar o makefile:
 
 ```shell
 sudo apt-get install make
-``` 
-
-Acessar o src: 
-
-```shell
-cd src
 ``` 
 
 Limpar o makefile:
