@@ -28,9 +28,8 @@ Grafo de Djikstra que quando aperta H cria um modo de ajuda onde o proprio jogo 
 
 ## Screenshots
 <div class="ling" style="display: inline_block">
-  <pre>           Snake                  Snake-Graph</pre>
+  <pre>           Forca              </pre>
     <img align="center" alt="Vazio" height="250" width="250" src="assets/forca.png">
-    <img align="center" alt="Vazio" height="250" width="250" src="assets/grafo_forca.png.png">
 </div>
 
 ## Instalação
