@@ -12,5 +12,7 @@ char *random_word(const char** words, int count);
 int play_game(const char* word, int wins);
 void draw_game(WINDOW *game, const char *display, int attempts, const char* wrong_letters, int wins);
 void draw_hangman(WINDOW *game, int attempts);
+void show_hint(WINDOW *game, const char* word, const char* mask, const char* wrong_letters);
+
 
 #endif

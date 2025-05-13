@@ -4,6 +4,8 @@
 #include <string.h>
 #include <time.h>
 #include <ctype.h>
+#include "hint.h"
+
 
 char** load_words(const char* filename, int* words_count) {
     FILE* file = fopen(filename, "r");
@@ -25,29 +27,56 @@ char** load_words(const char* filename, int* words_count) {
         if (strlen(buffer) == 0) continue;
 
         words[*words_count] = malloc(strlen(buffer) + 1);
+        if (words[*words_count] == NULL) {
+            printf("Erro ao alocar memória para palavra.\n");
+            fclose(file);
+            // Liberar memória já alocada
+            for (int i = 0; i < *words_count; i++) {
+                free(words[i]);
+            }
+            free(words);
+            return NULL;
+        }
         strcpy(words[*words_count], buffer);
         (*words_count)++;
+        
+        if (*words_count >= MAX_WORDS) break;
     }
     fclose(file);
     return words;
 }
 
 char *random_word(const char** words, int count) {
-    srand(time(NULL));
+    static int seed_initialized = 0;
+    if (!seed_initialized) {
+        srand(time(NULL));
+        seed_initialized = 1;
+    }
+    
+    if (count <= 0 || words == NULL) return NULL;
     return (char*)words[rand() % count];
 }
 
 int play_game(const char* word, int wins) {
+    if (word == NULL) return -1;
+    
     int len = strlen(word);
     char *display = malloc(len + 1);
+    if (display == NULL) return -1;
+    
     for (int i = 0; i < len; i++)
         display[i] = '_';
     display[len] = '\0';
 
     int attempts = 0, corrects = 0;
-    char wrong_letters[27] = "";
+    char wrong_letters[27] = {0}; // Inicializa com zeros
 
     WINDOW *game = newwin(20, 70, 2, 0);
+    if (game == NULL) {
+        free(display);
+        return -1;
+    }
+    
     keypad(game, TRUE);
 
     while (attempts < MAX_ATTEMPTS && corrects < len) {
@@ -56,11 +85,15 @@ int play_game(const char* word, int wins) {
         wrefresh(game);
 
         char guess = toupper(wgetch(game));
-        if (guess < 'A' || guess > 'Z') continue;
 
-        if (strchr(display, guess) || strchr(wrong_letters, guess))
+        if (attempts >= 3 && guess == 'H') {
+            show_hint(game, word, display, wrong_letters);
             continue;
+        }
 
+        if (guess < 'A' || guess > 'Z') continue;
+        if (strchr(display, guess) || strchr(wrong_letters, guess)) continue;
+        
         int hit = 0;
         for (int i = 0; i < len; i++) {
             if (toupper(word[i]) == guess && display[i] == '_') {
@@ -71,7 +104,11 @@ int play_game(const char* word, int wins) {
         }
 
         if (!hit) {
-            wrong_letters[strlen(wrong_letters)] = guess;
+            int wrong_len = strlen(wrong_letters);
+            if (wrong_len < 25) { // Deixa espaço para o caractere e o nulo
+                wrong_letters[wrong_len] = guess;
+                wrong_letters[wrong_len + 1] = '\0'; // Garante a terminação nula
+            }
             attempts++;
         } else {
             beep();
@@ -107,6 +144,8 @@ int play_game(const char* word, int wins) {
 }
 
 void draw_game(WINDOW *game, const char *display, int attempts, const char* wrong_letters, int wins) {
+    if (game == NULL || display == NULL || wrong_letters == NULL) return;
+    
     werase(game);
     box(game, 0, 0);
 
@@ -118,11 +157,16 @@ void draw_game(WINDOW *game, const char *display, int attempts, const char* wron
     mvwprintw(game, 4, 2, "Letras erradas: %s", wrong_letters);
     wattroff(game, COLOR_PAIR(2));
 
+    if (attempts >= 3)
+        mvwprintw(game, 17, 2, "(H) Mostrar dica ótima");
+
     draw_hangman(game, attempts);
     wrefresh(game);
 }
 
 void draw_hangman(WINDOW *game, int attempts) {
+    if (game == NULL) return;
+    
     wattron(game, COLOR_PAIR(3));
     mvwprintw(game, 3, 50, "+----+");
     mvwprintw(game, 4, 50, "|    |");
@@ -139,4 +183,12 @@ void draw_hangman(WINDOW *game, int attempts) {
     if (attempts > 4) mvwprintw(game, 7, 49, "/");
     if (attempts > 5) mvwprintw(game, 7, 51, "\\");
     wattroff(game, COLOR_PAIR(4));
+}
+
+void show_hint(WINDOW *game, const char* word, const char* mask, const char* wrong_letters) {
+    if (game == NULL || word == NULL || mask == NULL || wrong_letters == NULL) return;
+    
+    char hint = get_best_hint(word, mask, wrong_letters);
+    mvwprintw(game, 15, 2, "Dica ótima: %c", hint);
+    wrefresh(game);
 }
